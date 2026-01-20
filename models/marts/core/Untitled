@@ -1,0 +1,22 @@
+  - name: dim_customers
+    description: "Customer dimension enriched with order behavior metrics from fct_orders."
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]
+      - name: customer_unique_id
+        tests: [not_null]
+      - name: customer_state
+        tests: [not_null]
+      - name: orders_count
+        tests: [not_null]
+      - name: revenue_total
+        tests: [not_null]
+      - name: customer_segment
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - no_orders
+                  - one_time
+                  - repeat
