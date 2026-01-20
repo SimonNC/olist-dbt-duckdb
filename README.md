@@ -140,6 +140,38 @@ dbt docs serve
 - Applying dbt tests as data contracts
 - Shipping analytics code like production software
 
+
+
+---
+
+## 🔮 Possible Improvements
+
+This project is intentionally focused on **analytics engineering and SQL data modeling**.  
+Several extensions could be added to make the project more visual and business-facing, without changing the core architecture:
+
+- 📊 **Power BI dashboards** built directly on dbt marts (`mrt_kpi_*`) as the single source of truth  
+  - Executive overview (orders, revenue, trends)  
+  - Customer acquisition & retention (new vs repeat customers)  
+  - Revenue by geography (state-level analysis)  
+  - Order lifecycle & status distribution  
+
+- 📈 **Advanced analytics**
+  - Monthly and cohort-based retention analysis  
+  - Customer lifetime value (CLV) metrics  
+  - Seasonality and trend decomposition  
+
+- 🚚 **Operational insights**
+  - Delivery and logistics performance  
+  - Cancellation and unavailable order analysis  
+
+- 🔄 **Production hardening**
+  - Incremental dbt models for scalability  
+  - Snapshotting for slowly changing dimensions  
+  - Partitioning strategies for large datasets  
+
+All these improvements would rely exclusively on existing **dbt marts as the single source of truth**, keeping BI and analytics layers clean and consistent.
+
+
 ---
 
 ## 👤 About the Analyst
