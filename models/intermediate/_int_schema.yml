@@ -21,3 +21,24 @@ models:
 
       - name: payment_type_primary
         tests: [not_null]
+
+  - name: int_order_items__order_level
+    description: "Order items aggregated at order level."
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_olist__orders')
+                field: order_id
+
+      - name: items_count
+        tests: [not_null]
+
+      - name: items_gmv
+        tests: [not_null]
+
+      - name: freight_total
+        tests: [not_null]
