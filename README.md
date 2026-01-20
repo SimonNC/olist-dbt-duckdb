@@ -1,5 +1,7 @@
 # 📊 Olist Analytics Engineering Project (SQL / dbt / DuckDB)
 
+![SQL-powered analytics blueprint](screenshots/infography.png)
+
 > 📘 **Live dbt Documentation (Lineage, Models, Tests)**  
 > 👉 https://simonnc.github.io/olist-dbt-duckdb
 
