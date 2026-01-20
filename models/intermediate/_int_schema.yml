@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_payments__order_level
+    description: "Payments aggregated at order level. Grain: one row per order_id."
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_olist__orders')
+                field: order_id
+
+      - name: payment_value_total
+        tests: [not_null]
+
+      - name: payment_installments_max
+        tests: [not_null]
+
+      - name: payment_type_primary
+        tests: [not_null]
