@@ -1,40 +1,69 @@
 from pathlib import Path
-import pandas as pd
+import duckdb
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
-OUT_DIR = BASE_DIR / "data_sample"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+SAMPLE_DIR = BASE_DIR / "data_sample"
+WAREHOUSE_DIR = BASE_DIR / "warehouse"
+DB_PATH = WAREHOUSE_DIR / "olist.duckdb"
 
-# fichiers Kaggle Olist (noms attendus)
-FILES = {
-    "olist_orders_dataset.csv": 20000,
-    "olist_order_items_dataset.csv": 40000,
-    "olist_order_payments_dataset.csv": 30000,
-    "olist_customers_dataset.csv": 20000,
-    "olist_sellers_dataset.csv": 10000,
-    "olist_products_dataset.csv": 20000,
-    "olist_order_reviews_dataset.csv": 20000,
-    "olist_geolocation_dataset.csv": 50000,
+TABLES = {
+    "orders": "olist_orders_dataset.csv",
+    "order_items": "olist_order_items_dataset.csv",
+    "order_payments": "olist_order_payments_dataset.csv",
+    "customers": "olist_customers_dataset.csv",
+    "sellers": "olist_sellers_dataset.csv",
+    "products": "olist_products_dataset.csv",
+    "reviews": "olist_order_reviews_dataset.csv",
+    "geolocation": "olist_geolocation_dataset.csv",
 }
 
+def pick_base_path() -> Path:
+    """
+    CI-first strategy:
+    - use data_sample/ if present
+    - fallback to data/ for local runs
+    """
+    sample_orders = SAMPLE_DIR / TABLES["orders"]
+    full_orders = DATA_DIR / TABLES["orders"]
+
+    if sample_orders.exists():
+        print("Using data_sample/ as data source")
+        return SAMPLE_DIR
+
+    if full_orders.exists():
+        print("Using data/ as data source")
+        return DATA_DIR
+
+    raise FileNotFoundError(
+        "No Olist CSV files found. "
+        "Expected files in 'data_sample/' or 'data/'."
+    )
+
 def main():
-    missing = [f for f in FILES if not (DATA_DIR / f).exists()]
-    if missing:
-        raise FileNotFoundError(
-            "Fichiers manquants dans data/: " + ", ".join(missing)
-        )
+    base_path = pick_base_path()
 
-    for filename, nrows in FILES.items():
-        src = DATA_DIR / filename
-        dst = OUT_DIR / filename
-        print(f"Sampling {src.name} -> {dst.name} (n={nrows})")
+    WAREHOUSE_DIR.mkdir(parents=True, exist_ok=True)
+    con = duckdb.connect(str(DB_PATH))
+    con.execute("create schema if not exists raw;")
 
-        # lecture partielle (rapide) + write csv
-        df = pd.read_csv(src, nrows=nrows)
-        df.to_csv(dst, index=False)
+    for table, filename in TABLES.items():
+        csv_path = base_path / filename
+        print(f"Loading {csv_path}")
 
-    print(f"\nOK: data_sample generated in {OUT_DIR}")
+        if not csv_path.exists():
+            raise FileNotFoundError(f"Missing CSV file: {csv_path}")
+
+        con.execute(f"""
+            create or replace table raw.{table} as
+            select * from read_csv_auto('{csv_path.as_posix()}');
+        """)
+
+        count = con.execute(f"select count(*) from raw.{table}").fetchone()[0]
+        print(f"Loaded raw.{table} -> {count} rows")
+
+    con.close()
+    print(f"DuckDB database ready at {DB_PATH}")
 
 if __name__ == "__main__":
     main()
