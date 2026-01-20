@@ -42,3 +42,20 @@ models:
 
       - name: freight_total
         tests: [not_null]
+  - name: int_customers__order_metrics
+    description: "Customer-level metrics aggregated from fct_orders."
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_olist__customers')
+                field: customer_id
+      - name: orders_count
+        tests: [not_null]
+      - name: first_order_ts
+      - name: last_order_ts
+      - name: revenue_total
+        tests: [not_null]
