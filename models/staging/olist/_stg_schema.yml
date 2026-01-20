@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: stg_olist__orders
+    description: "Orders from Olist, cleaned and typed. Grain: one row per order."
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests: [not_null]
+      - name: order_status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - delivered
+                  - shipped
+                  - canceled
+                  - unavailable
+                  - processing
+                  - created
+                  - approved
+                  - invoiced
+
+
+  - name: stg_olist__order_items
+    description: "Order items from Olist. Grain: one row per (order_id, order_item_id)."
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_olist__orders')
+              field: order_id
+      - name: order_item_id
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+      - name: seller_id
+        tests: [not_null]
