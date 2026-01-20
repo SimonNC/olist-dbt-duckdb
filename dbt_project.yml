@@ -8,6 +8,8 @@ model-paths: ["models"]
 macro-paths: ["macros"]
 test-paths: ["tests"]
 analysis-paths: ["analysis"]
+docs-paths: ["docs"]
+
 
 models:
   olist_dbt:
