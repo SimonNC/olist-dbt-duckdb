@@ -59,3 +59,13 @@ models:
       - name: last_order_ts
       - name: revenue_total
         tests: [not_null]
+  - name: int_customers_unique__order_metrics
+    description: "Real-customer metrics (customer_unique_id) aggregated from fct_orders using dim_customer_ids bridge."
+    columns:
+      - name: customer_unique_id
+        tests: [not_null, unique]
+      - name: orders_count
+        tests: [not_null]
+      - name: revenue_total
+        tests: [not_null]
+
