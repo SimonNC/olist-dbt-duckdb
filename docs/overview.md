@@ -9,7 +9,7 @@ This project builds an **analytics-ready warehouse** from the Olist e-commerce d
 
 ## Quick links
 - 📚 dbt Docs: https://simonnc.github.io/olist-dbt-duckdb
-- 💾 Repo: (mets l’URL GitHub)
+- 💾 Repo: https://github.com/SimonNC/olist-dbt-duckdb
 - 🧱 Architecture: see `screenshots/architecture_schema.png`
 
 ## What you’ll find
