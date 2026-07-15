@@ -1,123 +1,123 @@
-# 📊 Olist Analytics Engineering Project (SQL / dbt / DuckDB)
+# 📊 Olist Analytics Engineering - SQL / dbt Pipeline
 
-![SQL-powered analytics blueprint](screenshots/infography.png)
+[![SQL-powered analytics blueprint](screenshots/infography.png)](screenshots/infography.png)
 
-> 📘 **Live dbt Documentation (Lineage, Models, Tests)**  
+> 📘 **Live dbt Documentation (Lineage, Models, Tests)**
 > 👉 https://simonnc.github.io/olist-dbt-duckdb
 
 ---
 
 ## 📌 Project Overview
-This project demonstrates a **production-style analytics engineering workflow** using **SQL only**, powered by **dbt + DuckDB**, on the Olist Brazilian e-commerce dataset.
 
-The goal is to:
-- model clean, testable analytics tables
-- build business-ready **facts, dimensions, and KPIs**
-- enforce data quality with dbt tests
-- publish **auto-generated documentation** via GitHub Pages
+This project demonstrates a **production-style analytics engineering pipeline** using **SQL and dbt** on the Olist Brazilian e-commerce dataset. It delivers **BI-ready tables** (facts, dimensions, KPI marts) with enforced **data quality** and **automated CI/CD**.
 
-This repository is intentionally **SQL-centric**, focusing on analytics engineering and data modeling best practices rather than notebooks or exploratory analysis.
+> **12 dbt models, data contracts as tests, and auto-generated documentation deployed via GitHub Pages.**
 
----
+The goal is to build a reliable **Single Source of Truth** for downstream dashboards and analytics, treating data as a product with version control, automated testing, and documentation at every layer.
 
-## 🧱 Tech Stack
-- **SQL**
-- **dbt**
-- **DuckDB**
-- **GitHub Actions (CI)**
-- **dbt Docs deployed on GitHub Pages**
+Built with DuckDB for local development; architecture designed to port to cloud warehouses (BigQuery, Snowflake).
 
 ---
 
 ## 🗺️ Architecture
 
-![Olist dbt DuckDB Architecture](screenshots/architecture_schema.png)
+[![Architecture](screenshots/architecture_schema.png)](screenshots/architecture_schema.png)
 
-### Architecture Overview
-This project follows a **layered analytics engineering architecture**, fully implemented in **SQL with dbt**, and executed on **DuckDB** as a local analytical warehouse.
+### Pipeline Layers
 
-#### 1️⃣ Data Sources & Ingestion
-- **Olist raw e-commerce dataset** (CSV / Parquet)
-- Lightweight **Python / SQL loading scripts** ingest raw files into DuckDB
-- Raw data is stored in a **Raw / Landing Zone**, without transformations
+```
+Raw CSV/Parquet
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│  STAGING        Type casting, renaming, cleaning    │
+│                 1:1 mapping with raw tables          │
+├─────────────────────────────────────────────────────┤
+│  INTERMEDIATE   Business logic, grain normalization │
+│                 Order-level aggregations             │
+├─────────────────────────────────────────────────────┤
+│  MARTS                                              │
+│  ├── core/      fct_orders, dim_customers, bridges  │
+│  └── kpis/      mrt_kpi_daily_* (BI-Ready)          │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+  Power BI / Looker / SQL dashboards
+```
 
-> In CI, a reduced `data_sample/` is loaded to ensure fast and reproducible builds.
+**Each layer has a clear responsibility.** Staging cleans and standardizes. Intermediate applies business logic and controls grains. Marts deliver analytics-ready tables that BI tools can consume directly, without further transformation.
 
-#### 2️⃣ dbt Transformation Layers
-All transformations are handled by **dbt models (SQL-only)** and structured into clear layers:
+---
 
-- **staging/**
-  - Type casting, renaming, basic cleaning
-  - One-to-one mapping with raw tables
+## 🛠️ Technical Stack
 
-- **intermediate/**
-  - Business logic and grain normalization
-  - Aggregations at order level (items, payments, customers)
-
-- **marts/**
-  - **core/**: canonical analytics models  
-    - `fct_orders` (1 row per order)
-    - customer dimensions and bridge tables
-  - **kpis/**: BI-ready KPI tables (`mrt_kpi_*`)
-
-#### 3️⃣ Data Quality & Governance
-- dbt tests used as **data contracts**
-- `not_null`, `unique`, `relationships`, `accepted_values`
-- Tests executed locally and in **CI (GitHub Actions)**
-
-- **dbt docs generated and deployed automatically**  
-  👉 https://simonnc.github.io/olist-dbt-duckdb
-
-#### 4️⃣ Outputs
-- **Analytics-ready tables** consumable by BI tools
-- **dbt documentation on GitHub Pages** (lineage, models, tests)
+| Component | Tool / Approach |
+|---|---|
+| **Transformation** | SQL only (no Python in the pipeline) |
+| **Orchestration** | dbt Core |
+| **Local warehouse** | DuckDB (portable; architecture targets BigQuery / Snowflake) |
+| **Data quality** | dbt tests as data contracts (`not_null`, `unique`, `relationships`, `accepted_values`) |
+| **CI/CD** | GitHub Actions - tests executed at every commit |
+| **Documentation** | dbt docs auto-generated and deployed to [GitHub Pages](https://simonnc.github.io/olist-dbt-duckdb) |
 
 ---
 
 ## 📦 Core Data Models
 
 ### Fact Table
-**`fct_orders`**  
-Grain: **1 row = 1 order**
 
-Contains:
-- order lifecycle timestamps
-- order status
-- item GMV & freight
-- payment metrics
+**`fct_orders`** - Grain: 1 row = 1 order
 
-Acts as the **single source of truth** for downstream analytics.
-
----
+The **single source of truth** for all downstream KPIs. Contains order lifecycle timestamps, order status, item GMV & freight, and payment metrics.
 
 ### Dimensions
-**`dim_customers`**  
-Grain: `customer_id` (technical identifier)
 
-**`dim_customer_ids`**  
-Bridge table mapping:
-- `customer_id` → `customer_unique_id`
+| Model | Grain | Purpose |
+|---|---|---|
+| `dim_customers` | `customer_id` (technical) | Customer attributes |
+| `dim_customer_ids` | Bridge table | Maps `customer_id` to `customer_unique_id` |
+| `dim_customers_unique` | `customer_unique_id` (business) | Enables repeat customer analysis, retention KPIs, customer lifetime revenue |
 
-**`dim_customers_unique`**  
-Grain: **real customer (`customer_unique_id`)**
+### KPI Marts (BI-Ready)
 
-Enables:
-- repeat customer analysis
-- retention KPIs
-- customer lifetime revenue
+| Mart | Business Use |
+|---|---|
+| `mrt_kpi_daily_orders` | Daily order volume and trends |
+| `mrt_kpi_daily_status` | Order status distribution over time |
+| `mrt_kpi_revenue_by_state_daily` | Revenue by geography |
+| `mrt_kpi_daily_customers` | New vs. returning customers |
+
+All KPI marts are built exclusively from core models. They are **BI-ready** and can be consumed directly by Power BI, Looker Studio, or any SQL-compatible dashboard tool.
 
 ---
 
-## 📊 KPI Marts
-All KPI marts are built exclusively from core models.
+## 🔐 Data Quality & Governance
 
-### Daily KPIs
-- **`mrt_kpi_daily_orders`**
-- **`mrt_kpi_daily_status`**
-- **`mrt_kpi_revenue_by_state_daily`**
-- **`mrt_kpi_daily_customers`**
+Data quality is not an afterthought - it is enforced at every layer through **dbt tests used as data contracts**.
 
-These tables are **BI-ready** and can be consumed directly by Power BI, Looker, or SQL dashboards.
+| Quality Check | Implementation |
+|---|---|
+| Primary key uniqueness | `unique` tests on all key columns |
+| Mandatory fields | `not_null` tests |
+| Referential integrity | `relationships` tests across models |
+| Business rules | `accepted_values` for status fields |
+| Continuous integration | GitHub Actions runs all tests at every commit |
+| Documentation | Auto-generated dbt docs with full lineage |
+
+> 👉 [Browse the live documentation and lineage](https://simonnc.github.io/olist-dbt-duckdb)
+
+---
+
+## 💡 Key Learnings
+
+| Topic | What I practiced |
+|---|---|
+| **Data modeling** | Designing facts, dimensions, and bridges with controlled grains |
+| **Grain mastery** | Separating technical IDs from business identifiers |
+| **SQL-only transformations** | No Python in the transformation layer - pure SQL logic |
+| **Data contracts** | Using dbt tests to guarantee data quality as a contract |
+| **CI/CD for data** | Automated testing and documentation at every commit |
+| **Analytics engineering** | Treating data pipelines like production software |
 
 ---
 
@@ -134,64 +134,51 @@ dbt docs serve
 
 ---
 
-## 🎯 Key Learnings
-- Analytics modeling with clear grains
-- Handling technical vs business identifiers
-- Designing bridge tables
-- Building SQL-only KPI layers
-- Applying dbt tests as data contracts
-- Shipping analytics code like production software
+## 🔮 Possible Extensions
 
+This project focuses on **analytics engineering and SQL data modeling**. Several extensions could be built on top without changing the core architecture:
 
+- **Power BI dashboards** on dbt marts as single source of truth (orders, revenue, retention, geography)
+- **Cohort-based retention analysis** and customer lifetime value (CLV)
+- **Incremental models** for scalability on larger datasets
+- **Snapshotting** for slowly changing dimensions
 
----
-
-## 🔮 Possible Improvements
-
-This project is intentionally focused on **analytics engineering and SQL data modeling**.  
-Several extensions could be added to make the project more visual and business-facing, without changing the core architecture:
-
-- 📊 **Power BI dashboards** built directly on dbt marts (`mrt_kpi_*`) as the single source of truth  
-  - Executive overview (orders, revenue, trends)  
-  - Customer acquisition & retention (new vs repeat customers)  
-  - Revenue by geography (state-level analysis)  
-  - Order lifecycle & status distribution  
-
-- 📈 **Advanced analytics**
-  - Monthly and cohort-based retention analysis  
-  - Customer lifetime value (CLV) metrics  
-  - Seasonality and trend decomposition  
-
-- 🚚 **Operational insights**
-  - Delivery and logistics performance  
-  - Cancellation and unavailable order analysis  
-
-- 🔄 **Production hardening**
-  - Incremental dbt models for scalability  
-  - Snapshotting for slowly changing dimensions  
-  - Partitioning strategies for large datasets  
-
-All these improvements would rely exclusively on existing **dbt marts as the single source of truth**, keeping BI and analytics layers clean and consistent.
-
+All extensions would consume existing marts, keeping the BI layer clean and consistent.
 
 ---
 
-## 👤 About the Analyst
+## 🎯 Skills Demonstrated
 
-**Simon Jorite**  
-Data Analyst | Analytics Engineer  
-Microsoft Power BI Certified (PL-300)
+This project demonstrates competencies aligned with **Data Analyst** and **Analytics Engineer** market requirements:
 
-Data Analyst with a strong background in **operations, logistics, finance, and e-commerce**, specialized in transforming complex datasets into **reliable KPIs and decision-oriented dashboards**.
+| Competency | How it is demonstrated |
+|---|---|
+| **SQL** (advanced) | Entire pipeline is SQL-only, with CTEs, joins, aggregations, grain control |
+| **ETL / data pipelines** | Layered architecture from raw to BI-ready marts |
+| **Data quality & governance** | dbt tests as data contracts, CI/CD enforcement |
+| **Data modeling** | Star-schema with facts, dimensions, bridges |
+| **KPI design** | Business-ready KPI marts for orders, revenue, customers |
+| **CI/CD & automation** | GitHub Actions running tests and deploying docs at every commit |
+| **Documentation** | Auto-generated dbt docs with full lineage graph |
 
-Experienced across the full analytics lifecycle:
-- Data preparation & quality (Python, SQL)
-- Analytical modeling (star schema, BI-ready datasets)
-- Business KPI design and storytelling in Power BI
+---
 
-This project reflects a **production-oriented analytics approach**, aligned with real business constraints and stakeholder expectations.
+## 🔗 Related Project
 
-📍 Location: Lyon - France (Open to Hybrid / Remote projects)  
-🔗 GitHub: https://github.com/SimonNC  
-🔗 LinkedIn: https://www.linkedin.com/in/simonjorite  
-📧 Contact: simon.jorite@gmail.com
+This analytics engineering pipeline feeds into the companion BI project:
+👉 [Olist E-commerce: End-to-End BI Solution](https://github.com/SimonNC/olist-data-analysis) (Python + Power BI dashboards)
+
+---
+
+## 👤 Author
+
+**Simon Jorite**
+Data Analyst - [Microsoft Certified Power BI Data Analyst (PL-300)](https://learn.microsoft.com/en-us/users/simonjorite-4846/credentials/b2cc3310a92a9302)
+
+15 years of experience in finance, operations, and e-commerce. I transform complex datasets into reliable KPIs and decision-ready dashboards.
+
+- GitHub: [github.com/SimonNC](https://github.com/SimonNC)
+- LinkedIn: [linkedin.com/in/simonjorite](https://www.linkedin.com/in/simonjorite)
+- Email: simon.jorite@gmail.com
+- Location: Lyon, France (Open to hybrid / remote)
+- Scheduling: [Book a 30-min exchange](https://calendly.com/simon-jorite/echange-da)
