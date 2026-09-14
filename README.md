@@ -1,21 +1,23 @@
-# 📊 Olist Analytics Engineering - SQL / dbt Pipeline
+# 📊 Olist Analytics Engineering - Pipeline SQL / dbt
+
+[🇬🇧 English version](README.en.md)
 
 [![SQL-powered analytics blueprint](screenshots/infography.png)](screenshots/infography.png)
 
-> 📘 **Live dbt Documentation (Lineage, Models, Tests)**
+> 📘 **Documentation dbt en ligne (Lineage, Modèles, Tests)**
 > 👉 https://simonnc.github.io/olist-dbt-duckdb
 
 ---
 
-## 📌 Project Overview
+## 📌 Vue d'ensemble du projet
 
-This project demonstrates a **production-style analytics engineering pipeline** using **SQL and dbt** on the Olist Brazilian e-commerce dataset. It delivers **BI-ready tables** (facts, dimensions, KPI marts) with enforced **data quality** and **automated CI/CD**.
+Ce projet illustre un **pipeline d'analytics engineering de niveau production** utilisant **SQL et dbt** sur le jeu de données e-commerce brésilien Olist. Il produit des **tables prêtes pour la BI** (faits, dimensions, marts KPI) avec une **qualité des données** renforcée et un **CI/CD automatisé**.
 
-> **12 dbt models, data contracts as tests, and auto-generated documentation deployed via GitHub Pages.**
+> **12 modèles dbt, des data contracts sous forme de tests, et une documentation générée automatiquement et déployée via GitHub Pages.**
 
-The goal is to build a reliable **Single Source of Truth** for downstream dashboards and analytics, treating data as a product with version control, automated testing, and documentation at every layer.
+L'objectif est de construire une **source de vérité unique** fiable pour les tableaux de bord et analyses en aval, en traitant la donnée comme un produit avec contrôle de version, tests automatisés et documentation à chaque couche.
 
-Built with DuckDB for local development; architecture designed to port to cloud warehouses (BigQuery, Snowflake).
+Construit avec DuckDB pour le développement local ; l'architecture est conçue pour être portée vers des entrepôts cloud (BigQuery, Snowflake).
 
 ---
 
@@ -23,105 +25,105 @@ Built with DuckDB for local development; architecture designed to port to cloud 
 
 [![Architecture](screenshots/architecture_schema.png)](screenshots/architecture_schema.png)
 
-### Pipeline Layers
+### Couches du pipeline
 
 ```
 Raw CSV/Parquet
      │
      ▼
 ┌─────────────────────────────────────────────────────┐
-│  STAGING        Type casting, renaming, cleaning    │
-│                 1:1 mapping with raw tables          │
+│  STAGING        Typage, renommage, nettoyage        │
+│                 mapping 1:1 avec les tables brutes  │
 ├─────────────────────────────────────────────────────┤
-│  INTERMEDIATE   Business logic, grain normalization │
-│                 Order-level aggregations             │
+│  INTERMEDIATE   Logique métier, normalisation du grain │
+│                 Agrégations au niveau commande      │
 ├─────────────────────────────────────────────────────┤
 │  MARTS                                              │
 │  ├── core/      fct_orders, dim_customers, bridges  │
-│  └── kpis/      mrt_kpi_daily_* (BI-Ready)          │
+│  └── kpis/      mrt_kpi_daily_* (prêt pour la BI)   │
 └─────────────────────────────────────────────────────┘
      │
      ▼
   Power BI / Looker / SQL dashboards
 ```
 
-**Each layer has a clear responsibility.** Staging cleans and standardizes. Intermediate applies business logic and controls grains. Marts deliver analytics-ready tables that BI tools can consume directly, without further transformation.
+**Chaque couche a une responsabilité claire.** Staging nettoie et standardise. Intermediate applique la logique métier et contrôle les grains. Marts livrent des tables prêtes pour l'analyse, directement consommables par les outils BI, sans transformation supplémentaire.
 
 ---
 
-## 🛠️ Technical Stack
+## 🛠️ Stack technique
 
-| Component | Tool / Approach |
+| Composant | Outil / Approche |
 |---|---|
-| **Transformation** | SQL only (no Python in the pipeline) |
+| **Transformation** | SQL uniquement (pas de Python dans le pipeline) |
 | **Orchestration** | dbt Core |
-| **Local warehouse** | DuckDB (portable; architecture targets BigQuery / Snowflake) |
-| **Data quality** | dbt tests as data contracts (`not_null`, `unique`, `relationships`, `accepted_values`) |
-| **CI/CD** | GitHub Actions - tests executed at every commit |
-| **Documentation** | dbt docs auto-generated and deployed to [GitHub Pages](https://simonnc.github.io/olist-dbt-duckdb) |
+| **Entrepôt local** | DuckDB (portable ; l'architecture vise BigQuery / Snowflake) |
+| **Qualité des données** | Tests dbt comme data contracts (`not_null`, `unique`, `relationships`, `accepted_values`) |
+| **CI/CD** | GitHub Actions - tests exécutés à chaque commit |
+| **Documentation** | Documentation dbt générée automatiquement et déployée sur [GitHub Pages](https://simonnc.github.io/olist-dbt-duckdb) |
 
 ---
 
-## 📦 Core Data Models
+## 📦 Modèles de données principaux
 
-### Fact Table
+### Table de faits
 
-**`fct_orders`** - Grain: 1 row = 1 order
+**`fct_orders`** - Grain : 1 ligne = 1 commande
 
-The **single source of truth** for all downstream KPIs. Contains order lifecycle timestamps, order status, item GMV & freight, and payment metrics.
+La **source de vérité unique** pour tous les KPI en aval. Contient les horodatages du cycle de vie de la commande, le statut de la commande, le GMV & le fret par article, et les métriques de paiement.
 
 ### Dimensions
 
-| Model | Grain | Purpose |
+| Modèle | Grain | Rôle |
 |---|---|---|
-| `dim_customers` | `customer_id` (technical) | Customer attributes |
-| `dim_customer_ids` | Bridge table | Maps `customer_id` to `customer_unique_id` |
-| `dim_customers_unique` | `customer_unique_id` (business) | Enables repeat customer analysis, retention KPIs, customer lifetime revenue |
+| `dim_customers` | `customer_id` (technique) | Attributs client |
+| `dim_customer_ids` | Table de correspondance | Fait le lien entre `customer_id` et `customer_unique_id` |
+| `dim_customers_unique` | `customer_unique_id` (métier) | Permet l'analyse des clients récurrents, les KPI de rétention, le revenu vie client |
 
-### KPI Marts (BI-Ready)
+### Marts KPI (prêts pour la BI)
 
-| Mart | Business Use |
+| Mart | Usage métier |
 |---|---|
-| `mrt_kpi_daily_orders` | Daily order volume and trends |
-| `mrt_kpi_daily_status` | Order status distribution over time |
-| `mrt_kpi_revenue_by_state_daily` | Revenue by geography |
-| `mrt_kpi_daily_customers` | New vs. returning customers |
+| `mrt_kpi_daily_orders` | Volume et tendances de commandes quotidiennes |
+| `mrt_kpi_daily_status` | Répartition des statuts de commande dans le temps |
+| `mrt_kpi_revenue_by_state_daily` | Revenu par zone géographique |
+| `mrt_kpi_daily_customers` | Nouveaux clients vs. clients récurrents |
 
-All KPI marts are built exclusively from core models. They are **BI-ready** and can be consumed directly by Power BI, Looker Studio, or any SQL-compatible dashboard tool.
+Tous les marts KPI sont construits exclusivement à partir des modèles core. Ils sont **prêts pour la BI** et peuvent être consommés directement par Power BI, Looker Studio, ou tout outil de tableau de bord compatible SQL.
 
 ---
 
-## 🔐 Data Quality & Governance
+## 🔐 Qualité des données & gouvernance
 
-Data quality is not an afterthought - it is enforced at every layer through **dbt tests used as data contracts**.
+La qualité des données n'est pas une réflexion après coup - elle est imposée à chaque couche grâce aux **tests dbt utilisés comme data contracts**.
 
-| Quality Check | Implementation |
+| Contrôle qualité | Mise en œuvre |
 |---|---|
-| Primary key uniqueness | `unique` tests on all key columns |
-| Mandatory fields | `not_null` tests |
-| Referential integrity | `relationships` tests across models |
-| Business rules | `accepted_values` for status fields |
-| Continuous integration | GitHub Actions runs all tests at every commit |
-| Documentation | Auto-generated dbt docs with full lineage |
+| Unicité des clés primaires | Tests `unique` sur toutes les colonnes clés |
+| Champs obligatoires | Tests `not_null` |
+| Intégrité référentielle | Tests `relationships` entre les modèles |
+| Règles métier | `accepted_values` pour les champs de statut |
+| Intégration continue | GitHub Actions exécute tous les tests à chaque commit |
+| Documentation | Documentation dbt générée automatiquement avec lineage complet |
 
-> 👉 [Browse the live documentation and lineage](https://simonnc.github.io/olist-dbt-duckdb)
+> 👉 [Parcourir la documentation et le lineage en ligne](https://simonnc.github.io/olist-dbt-duckdb)
 
 ---
 
-## 💡 Key Learnings
+## 💡 Enseignements clés
 
-| Topic | What I practiced |
+| Sujet | Ce que j'ai pratiqué |
 |---|---|
-| **Data modeling** | Designing facts, dimensions, and bridges with controlled grains |
-| **Grain mastery** | Separating technical IDs from business identifiers |
-| **SQL-only transformations** | No Python in the transformation layer - pure SQL logic |
-| **Data contracts** | Using dbt tests to guarantee data quality as a contract |
-| **CI/CD for data** | Automated testing and documentation at every commit |
-| **Analytics engineering** | Treating data pipelines like production software |
+| **Modélisation des données** | Conception de faits, dimensions et tables de correspondance avec des grains maîtrisés |
+| **Maîtrise du grain** | Séparation des identifiants techniques et des identifiants métier |
+| **Transformations SQL uniquement** | Pas de Python dans la couche de transformation - logique purement SQL |
+| **Data contracts** | Utilisation des tests dbt pour garantir la qualité des données sous forme de contrat |
+| **CI/CD pour la donnée** | Tests et documentation automatisés à chaque commit |
+| **Analytics engineering** | Traiter les pipelines de données comme du logiciel de production |
 
 ---
 
-## 🚀 How to Run Locally
+## 🚀 Exécution en local
 
 ```bash
 python -m venv .venv
@@ -134,51 +136,51 @@ dbt docs serve
 
 ---
 
-## 🔮 Possible Extensions
+## 🔮 Extensions possibles
 
-This project focuses on **analytics engineering and SQL data modeling**. Several extensions could be built on top without changing the core architecture:
+Ce projet se concentre sur **l'analytics engineering et la modélisation de données SQL**. Plusieurs extensions pourraient être construites par-dessus sans changer l'architecture centrale :
 
-- **Power BI dashboards** on dbt marts as single source of truth (orders, revenue, retention, geography)
-- **Cohort-based retention analysis** and customer lifetime value (CLV)
-- **Incremental models** for scalability on larger datasets
-- **Snapshotting** for slowly changing dimensions
+- **Tableaux de bord Power BI** sur les marts dbt comme source de vérité unique (commandes, revenu, rétention, géographie)
+- **Analyse de rétention par cohortes** et valeur vie client (CLV)
+- **Modèles incrémentaux** pour la scalabilité sur des jeux de données plus volumineux
+- **Snapshotting** pour les dimensions à évolution lente
 
-All extensions would consume existing marts, keeping the BI layer clean and consistent.
+Toutes les extensions consommeraient les marts existants, en gardant la couche BI propre et cohérente.
 
 ---
 
-## 🎯 Skills Demonstrated
+## 🎯 Compétences démontrées
 
-This project demonstrates competencies aligned with **Data Analyst** and **Analytics Engineer** market requirements:
+Ce projet démontre des compétences alignées avec les exigences du marché pour les postes de **Data Analyst** et d'**Analytics Engineer** :
 
-| Competency | How it is demonstrated |
+| Compétence | Comment elle est démontrée |
 |---|---|
-| **SQL** (advanced) | Entire pipeline is SQL-only, with CTEs, joins, aggregations, grain control |
-| **ETL / data pipelines** | Layered architecture from raw to BI-ready marts |
-| **Data quality & governance** | dbt tests as data contracts, CI/CD enforcement |
-| **Data modeling** | Star-schema with facts, dimensions, bridges |
-| **KPI design** | Business-ready KPI marts for orders, revenue, customers |
-| **CI/CD & automation** | GitHub Actions running tests and deploying docs at every commit |
-| **Documentation** | Auto-generated dbt docs with full lineage graph |
+| **SQL** (avancé) | Pipeline entièrement en SQL, avec CTE, jointures, agrégations, contrôle du grain |
+| **ETL / pipelines de données** | Architecture en couches, du brut aux marts prêts pour la BI |
+| **Qualité des données & gouvernance** | Tests dbt comme data contracts, application via CI/CD |
+| **Modélisation des données** | Star-schema avec faits, dimensions, tables de correspondance |
+| **Conception de KPI** | Marts KPI prêts pour le métier pour les commandes, le revenu, les clients |
+| **CI/CD & automatisation** | GitHub Actions exécutant les tests et déployant la documentation à chaque commit |
+| **Documentation** | Documentation dbt générée automatiquement avec graphe de lineage complet |
 
 ---
 
-## 🔗 Related Project
+## 🔗 Projet lié
 
-This analytics engineering pipeline feeds into the companion BI project:
-👉 [Olist E-commerce: End-to-End BI Solution](https://github.com/SimonNC/olist-data-analysis) (Python + Power BI dashboards)
+Ce pipeline analytics engineering alimente le projet BI compagnon :
+👉 [Olist E-commerce: End-to-End BI Solution](https://github.com/SimonNC/olist-data-analysis) (Python + tableaux de bord Power BI)
 
 ---
 
-## 👤 Author
+## 👤 Auteur
 
 **Simon Jorite**
-Data Analyst - [Microsoft Certified Power BI Data Analyst (PL-300)](https://learn.microsoft.com/en-us/users/simonjorite-4846/credentials/b2cc3310a92a9302)
+Data Analyst - [Certifié Microsoft Power BI Data Analyst (PL-300)](https://learn.microsoft.com/en-us/users/simonjorite-4846/credentials/b2cc3310a92a9302)
 
-15 years of experience in finance, operations, and e-commerce. I transform complex datasets into reliable KPIs and decision-ready dashboards.
+15 ans d'expérience en finance, opérations et e-commerce. Je transforme des jeux de données complexes en KPI fiables et en tableaux de bord prêts pour la décision.
 
-- GitHub: [github.com/SimonNC](https://github.com/SimonNC)
-- LinkedIn: [linkedin.com/in/simonjorite](https://www.linkedin.com/in/simonjorite)
-- Email: simon.jorite@gmail.com
-- Location: Lyon, France (Open to hybrid / remote)
-- Scheduling: [Book a 30-min exchange](https://calendly.com/simon-jorite/echange-da)
+- GitHub : [github.com/SimonNC](https://github.com/SimonNC)
+- LinkedIn : [linkedin.com/in/simonjorite](https://www.linkedin.com/in/simonjorite)
+- Email : simon.jorite@gmail.com
+- Localisation : Lyon, France (Ouvert à un poste hybride ou en télétravail)
+- Prise de RDV : [Réserver un échange de 30 min](https://calendly.com/simon-jorite/echange-da)
