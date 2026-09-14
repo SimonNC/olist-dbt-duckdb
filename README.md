@@ -1,6 +1,6 @@
 # 📊 Olist Analytics Engineering - Pipeline SQL / dbt
 
-[🇬🇧 English version](README.en.md)
+[🇬🇧 English version](README.en.md) · [📅 Réserver un échange](https://cal.clixius.com/simon/echange)
 
 [![SQL-powered analytics blueprint](screenshots/infography.png)](screenshots/infography.png)
 
@@ -183,4 +183,4 @@ Data Analyst - [Certifié Microsoft Power BI Data Analyst (PL-300)](https://lear
 - LinkedIn : [linkedin.com/in/simonjorite](https://www.linkedin.com/in/simonjorite)
 - Email : simon.jorite@gmail.com
 - Localisation : Lyon, France (Ouvert à un poste hybride ou en télétravail)
-- Prise de RDV : [Réserver un échange de 30 min](https://calendly.com/simon-jorite/echange-da)
+- Prise de RDV : [Réserver un échange de 30 min](https://cal.clixius.com/simon/echange)
