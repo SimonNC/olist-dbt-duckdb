@@ -31,17 +31,17 @@ Construit avec DuckDB pour le développement local ; l'architecture est conçue 
 Raw CSV/Parquet
      │
      ▼
-┌─────────────────────────────────────────────────────┐
-│  STAGING        Typage, renommage, nettoyage        │
-│                 mapping 1:1 avec les tables brutes  │
-├─────────────────────────────────────────────────────┤
+┌────────────────────────────────────────────────────────┐
+│  STAGING        Typage, renommage, nettoyage           │
+│                 mapping 1:1 avec les tables brutes     │
+├────────────────────────────────────────────────────────┤
 │  INTERMEDIATE   Logique métier, normalisation du grain │
-│                 Agrégations au niveau commande      │
-├─────────────────────────────────────────────────────┤
-│  MARTS                                              │
-│  ├── core/      fct_orders, dim_customers, bridges  │
-│  └── kpis/      mrt_kpi_daily_* (prêt pour la BI)   │
-└─────────────────────────────────────────────────────┘
+│                 Agrégations au niveau commande         │
+├────────────────────────────────────────────────────────┤
+│  MARTS                                                 │
+│  ├── core/      fct_orders, dim_customers, bridges     │
+│  └── kpis/      mrt_kpi_daily_* (prêt pour la BI)      │
+└────────────────────────────────────────────────────────┘
      │
      ▼
   Power BI / Looker / SQL dashboards
